@@ -395,17 +395,18 @@ double normTwo(Matrix r){
 
 int main(int argc, char* argv[]){
   FILE *in_file  = fopen("data.txt", "r"); // read only 
-  FILE *out_file_loss = fopen("loss.txt", "w"); // write only
+  //FILE *out_file_loss = fopen("loss.txt", "w"); // write only
+  FILE *out_file_weights = fopen("weights_base.txt", "w"); // write only
   
   // test for files not existing. 
-  if (in_file == NULL || out_file_loss == NULL) 
-	{   
-	  printf("Error! Could not open file\n"); 
-	  exit(-1); // must include stdlib.h 
-	} 
+//  if (in_file == NULL || out_file_loss == NULL) 
+//	{   
+//	  printf("Error! Could not open file\n"); 
+//	  exit(-1); // must include stdlib.h 
+//	} 
 	
   Matrix x, y, b, J, b_prev, r, temp, inv,temp2, temp3, temp4, temp_A, temp_B,identity, temp5;
-  int N = 5;
+  int N = 100;
   int num_params = 2;
   double tol = 0.001;
   init(&x,N,1);
@@ -468,12 +469,12 @@ int main(int argc, char* argv[]){
           J.elements[i*J.width + j] = funcThreeD(x.elements[i*x.width],j, b);
 	  printf("b updated:\n");
 	  print(b);
-	  fprintf(out_file_loss, "%f\n",normTwo(r));
+	  
+	  //fprintf(out_file_loss, "%f\n",normTwo(r));
 	  if (normTwo(r) < tol){
-		fclose(out_file_loss);
-		FILE *out_file_weights = fopen("weights_base.txt","r");
-		fprintf(out_file_weights, "%f\n",b.elements[0]);
-		fprintf(out_file_weights, "%f\n",b.elements[1]);
+		//fclose(out_file_loss);
+		//FILE *out_file_weights = fopen("weights_base.txt","r");
+		fprintf(out_file_weights, "%f %f\n",b.elements[0],b.elements[1]);
 		fclose(out_file_weights);
 		break;
 	  }
