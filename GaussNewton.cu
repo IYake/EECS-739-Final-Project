@@ -8,6 +8,8 @@
   */
 
 #include "multShare.h"
+#include <math.h>
+#include <stdio.h>
 
 // Matrix multiplication - Host code
 // Matrix dimensions are assumed to be multiples of BLOCK_SIZE
@@ -259,18 +261,15 @@ void getCofactor(Matrix* A, Matrix* temp, int p, int q, int n)
 
 /* Recursive function for finding determinant of matrix. 
    n is current dimension of A[][]. */
-int determinant(Matrix* A, int n) 
+double determinant(Matrix* A, int n) 
 { 
-    int D = 0; // Initialize result 
+    double D = 0; // Initialize result 
   
     //  Base case : if matrix contains single element 
-	//printf("This is A: ");
-	//print(*A);
     if (n == 1) 
         return A->elements[0]; 
-	//printf("A->elements[0]: %f\n",A->elements[0]);
 	Matrix temp;
-	init(&temp,n,n);// To store cofactors 
+	init(&temp,A->width,A->width);// To store cofactors 
   
     int sign = 1;  // To store sign multiplier 
   
@@ -285,8 +284,6 @@ int determinant(Matrix* A, int n)
   
         // terms are to be added with alternate sign 
         sign = -sign;
-		//printf("D: %d\n",D);
-		//printf("A->elements[0*A->width+f]: %f\n",A->elements[0*A->width+f]);
     } 
   
     return D; 
@@ -326,13 +323,11 @@ void adjoint(Matrix* A, Matrix* Adj)
 
 // Function to calculate and store inverse, returns false if 
 // matrix is singular 
-int inverse(Matrix* A, Matrix* Inv) 
+double inverse(Matrix* A, Matrix* Inv) 
 { 
-	//printf("A in inverse: ");
-	//print(*A);
 	int N = A->width;
     // Find determinant of A[][] 
-    int det = determinant(A, N); 
+    double det = determinant(A, N); 
     if (det == 0) 
     { 
         printf("Singular matrix, can't find its inverse\n");
@@ -347,7 +342,7 @@ int inverse(Matrix* A, Matrix* Inv)
     // Find Inverse using formula "inverse(A) = adj(A)/det(A)" 
     for (int i=0; i<N; i++) 
         for (int j=0; j<N; j++) 
-            Inv->elements[i*N+j] = Adj.elements[i*N+j]/float(det); 
+            Inv->elements[i*Inv->width+j] = Adj.elements[i*A->width+j]/float(det); 
     return 1; 
 }
 
@@ -358,7 +353,7 @@ Matrix subtract(Matrix A, Matrix B){
 	if (A.height != B.height || A.width != B.width)
 	  printf("Subtract error: dimensions of matrices don't match\n");
 	init(&C,A.height,A.width);
-	double alpha = 0.1;
+	double alpha = 1;
 	for (int i = 0; i < C.height; i++)
 	  for (int j = 0; j < C.width; j++)
 		C.elements[i*C.width+j] = A.elements[i*C.width+j] - alpha*B.elements[i*C.width+j];
@@ -400,10 +395,26 @@ Matrix pseudoInv(Matrix A){
 	//printf("sending pseudo: \n");
 	//print(pseudo);
 	return pseudo;
-	
+}
+
+double normTwo(Matrix r){
+	double sum = 0;
+	for (int i = 0; i < r.height; i++){
+		sum += r.elements[i]*r.elements[i];
+	}
+	return sqrt(sum);
 }
 
 int main(int argc, char* argv[]){
+  FILE *in_file  = fopen("data.txt", "r"); // read only 
+  FILE *out_file = fopen("loss.txt", "w"); // write only
+  // test for files not existing. 
+  if (in_file == NULL || out_file == NULL) 
+	{   
+	  printf("Error! Could not open file\n"); 
+	  exit(-1); // must include stdlib.h 
+	} 
+	
   Matrix x, y, b, J, b_prev, r, temp, inv,temp2, temp3, temp4, temp_A, temp_B,identity, temp5;
   int N = 5;
   int num_params = 2;
@@ -464,7 +475,7 @@ int main(int argc, char* argv[]){
   //printf("Finished initializing...\n");
   ////convergence loop
   //copy(&b,&b_prev);
-  for (int iter = 0; iter < 20; iter++){
+  for (int iter = 0; iter < 1; iter++){
 	  for (int i = 0; i < N; i++)
 		r.elements[i] = funcThreeP(x.elements[i],b) - y.elements[i];
 		//printf("predict(%f) = %f\n",x.elements[i],funcThreeP(x.elements[i],b));
@@ -506,14 +517,14 @@ int main(int argc, char* argv[]){
 	  //printf("J^-1:\n");
 	  //print(temp3);
 	  
-	  printf("pseudo * r:\n");
-	  if (temp3.elements[0]+temp3.elements[1] > 1){
-		temp3.elements[0] = temp3.elements[0]/(temp3.elements[0]+temp3.elements[1]);
-		temp3.elements[1] = temp3.elements[1]/(temp3.elements[0]+temp3.elements[1]);
-		}
+	  //printf("pseudo * r:\n");
+	  //if (temp3.elements[0]+temp3.elements[1] > 1){
+		//temp3.elements[0] = temp3.elements[0]/(temp3.elements[0]+temp3.elements[1]);
+		//temp3.elements[1] = temp3.elements[1]/(temp3.elements[0]+temp3.elements[1]);
+		//}
 	
 	  //NORMALIZATION ISN"T WORKING
-	  print(temp3);
+	  //print(temp3);
 	  
 	  b = subtract(b,T(temp3));
 	  //SEE IF THIS SUBTRACT IS WORKING
@@ -525,6 +536,7 @@ int main(int argc, char* argv[]){
           J.elements[i*J.width + j] = funcThreeD(x.elements[i*x.width],j, b);
 	  printf("b updated:\n");
 	  print(b);
+	  fprintf(out_file, "%f\n",normTwo(r));
   }
 }
 
