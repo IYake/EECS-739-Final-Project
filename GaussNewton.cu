@@ -425,18 +425,17 @@ int main(int argc, char* argv[]){
   init(&temp_B,num_params,1);
   init(&temp5,num_params,num_params);
   
-  temp.elements[0] = 1;
-  temp.elements[1] = 2;
-  temp.elements[2] = 4;
-  temp.elements[3] = 5;
-  temp.elements[4] = 8;
+//  temp.elements[0] = 1;
+//  temp.elements[1] = 2;
+//  temp.elements[2] = 4;
+//  temp.elements[3] = 5;
+//  temp.elements[4] = 8;
   
 
   for(int i = 0; i < x.height; i++)
     for(int j = 0; j < x.width; j++){
-      x.elements[i*x.width + j] = temp.elements[i];
+      x.elements[i*x.width + j] = i*x.width + j;
       y.elements[i*y.width + j] = funcThreeTrue(x.elements[i*x.width+j]);
-	  printf("f(%f) = %f\n", x.elements[i*x.width + j],funcThreeTrue(x.elements[i*x.width+j]));
 	}
 
 //initial guess
@@ -447,21 +446,22 @@ int main(int argc, char* argv[]){
     for(int j = 0; j < J.width; j++) //for each parameter
        J.elements[i*J.width + j] = funcThreeD(x.elements[i*x.width],j, b);
 		
-  for (int iter = 0; iter < 100000; iter++){  
+  for (int iter = 0; iter < 1; iter++){  
 	  for (int i = 0; i < N; i++)
 		r.elements[i] = funcThreeP(x.elements[i],b) - y.elements[i];
 	  
 	  temp4 = T(J);
 	  MatMul_(&temp4,&r,&temp_B);
 	  
-	  
+	  print(temp_B);
 	  init(&temp3,num_params,1);
 	  MatMul_(&temp4,&J,&temp_A);
+	  print(temp_A);
 	  
 	  inverse(&temp_A,&temp5);
 	  MatMul_(&temp5,&temp_B,&temp3);
 	  
-	  
+	  print(temp5);
 	  b = subtract(b,T(temp3));
 	  
 	  for(int i = 0; i < J.height; i++) //for each equation
