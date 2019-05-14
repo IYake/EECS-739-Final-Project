@@ -353,7 +353,7 @@ Matrix subtract(Matrix A, Matrix B){
 	if (A.height != B.height || A.width != B.width)
 	  printf("Subtract error: dimensions of matrices don't match\n");
 	init(&C,A.height,A.width);
-	double alpha = 1;
+	double alpha = 0.1;
 	for (int i = 0; i < C.height; i++)
 	  for (int j = 0; j < C.width; j++)
 		C.elements[i*C.width+j] = A.elements[i*C.width+j] - alpha*B.elements[i*C.width+j];
@@ -379,21 +379,9 @@ Matrix pseudoInv(Matrix A){
 	init(&temp,A.width,A.width);
 	init(&temp2,A.width,A.height);
 	MatMul(T(A),A,temp);
-	//printf("T(A): \n");
-	//print(T(A));
-	
-	//printf("\nA: ");
-	//print(A);
-	printf("T(A)*A: \n");
-	print(temp);
 	inverse(&temp,&inv);
-	printf("inverse(temp): \n");
-	//print(inv);
-	
 	MatMul(inv,T(A),pseudo);
-	
-	//printf("sending pseudo: \n");
-	//print(pseudo);
+
 	return pseudo;
 }
 
@@ -407,9 +395,10 @@ double normTwo(Matrix r){
 
 int main(int argc, char* argv[]){
   FILE *in_file  = fopen("data.txt", "r"); // read only 
-  FILE *out_file = fopen("loss.txt", "w"); // write only
+  FILE *out_file_loss = fopen("loss.txt", "w"); // write only
+  
   // test for files not existing. 
-  if (in_file == NULL || out_file == NULL) 
+  if (in_file == NULL || out_file_loss == NULL) 
 	{   
 	  printf("Error! Could not open file\n"); 
 	  exit(-1); // must include stdlib.h 
@@ -418,7 +407,7 @@ int main(int argc, char* argv[]){
   Matrix x, y, b, J, b_prev, r, temp, inv,temp2, temp3, temp4, temp_A, temp_B,identity, temp5;
   int N = 5;
   int num_params = 2;
-  
+  double tol = 0.001;
   init(&x,N,1);
   init(&y,N,1);
   init(&r,N,1);
@@ -449,94 +438,45 @@ int main(int argc, char* argv[]){
 	  printf("f(%f) = %f\n", x.elements[i*x.width + j],funcThreeTrue(x.elements[i*x.width+j]));
 	}
 
-//  for(int i = 0; i < b.height; i++)
-//    for(int j = 0; j < b.width; j++){
-//      b.elements[i*b.width + j] = 1;
-//      b_prev.elements[i*b_prev.width + j] = b.elements[i*b_prev.width + j];
-//	}
+//initial guess
 	b.elements[0] = 2.5;
 	b.elements[1] = 0.25;
-	//b.elements[0] = 3.0;
-	//b.elements[1] = 1.0;
 
   for(int i = 0; i < J.height; i++) //for each equation
     for(int j = 0; j < J.width; j++) //for each parameter
        J.elements[i*J.width + j] = funcThreeD(x.elements[i*x.width],j, b);
 		
-
-  printf("true x:\n");
-  print(x);
-  printf("true y:\n");
-  print(y);
-  printf("initial b:\n");
-  print(b);
-  printf("initial J:\n");
-  print(J);
-  //printf("Finished initializing...\n");
-  ////convergence loop
-  //copy(&b,&b_prev);
-  for (int iter = 0; iter < 1; iter++){
+  for (int iter = 0; iter < 100000; iter++){  
 	  for (int i = 0; i < N; i++)
 		r.elements[i] = funcThreeP(x.elements[i],b) - y.elements[i];
-		//printf("predict(%f) = %f\n",x.elements[i],funcThreeP(x.elements[i],b));
-	
-	  //printf("r:\n");
-	  //print(r);
-	  
-	  //printf("J:\n");
-	  //print(J);
 	  
 	  temp4 = T(J);
 	  MatMul_(&temp4,&r,&temp_B);
-	  //printf("temp_B:\n");
-	  //print(temp_B);
 	  
 	  
 	  init(&temp3,num_params,1);
 	  MatMul_(&temp4,&J,&temp_A);
 	  
-	  //printf("temp_A:\n");
-	  //print(temp_A);
-	  
-	  
-	  
-	  
-	  
-	  
 	  inverse(&temp_A,&temp5);
-	  //printf("temp5: \n");
-	  //print(temp5);
 	  MatMul_(&temp5,&temp_B,&temp3);
 	  
 	  
-	  //printf("temp3: \n");
-	  //print(temp3);
-	  //temp3 = pseudoInv(J);
-	  //MatMul_(&temp3,&r,&temp3);
-	  
-	  //printf("J^-1:\n");
-	  //print(temp3);
-	  
-	  //printf("pseudo * r:\n");
-	  //if (temp3.elements[0]+temp3.elements[1] > 1){
-		//temp3.elements[0] = temp3.elements[0]/(temp3.elements[0]+temp3.elements[1]);
-		//temp3.elements[1] = temp3.elements[1]/(temp3.elements[0]+temp3.elements[1]);
-		//}
-	
-	  //NORMALIZATION ISN"T WORKING
-	  //print(temp3);
-	  
 	  b = subtract(b,T(temp3));
-	  //SEE IF THIS SUBTRACT IS WORKING
-	  //WHY DOES B ALMOST ALWAYS INCREASE
-	  //DIVERGES FOR LARGE ITERATIONS
 	  
 	  for(int i = 0; i < J.height; i++) //for each equation
 	    for(int j = 0; j < J.width; j++) //for each parameter
           J.elements[i*J.width + j] = funcThreeD(x.elements[i*x.width],j, b);
 	  printf("b updated:\n");
 	  print(b);
-	  fprintf(out_file, "%f\n",normTwo(r));
+	  fprintf(out_file_loss, "%f\n",normTwo(r));
+	  if (normTwo(r) < tol){
+		fclose(out_file_loss);
+		FILE *out_file_weights = fopen("weights_base.txt","r");
+		fprintf(out_file_weights, "%f\n",b.elements[0]);
+		fprintf(out_file_weights, "%f\n",b.elements[1]);
+		fclose(out_file_weights);
+		break;
+	  }
   }
 }
 
