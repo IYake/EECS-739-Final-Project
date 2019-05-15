@@ -13,6 +13,9 @@
 #include <stdlib.h>
 #include<time.h> 
 
+#define true_b0 0.5
+#define true_b1 1.75
+
 // Matrix multiplication - Host code
 // Matrix dimensions are assumed to be multiples of BLOCK_SIZE
 void MatMul(const Matrix A, const Matrix B, Matrix C) {
@@ -137,25 +140,23 @@ __global__ void MatMulKernel(Matrix A, Matrix B, Matrix C) {
 }
 
 float funcOneTrue(float x){
-  //function in this example is linear
-  return 2*x;
+  return true_b0*sin(true_b1*x);
 }
 
 float funcOneP(float x, Matrix b){
-  return b.elements[0]*x+b.elements[1];
+  return b.elements[0]*sin(b.elements[1]*x);
 }
 
 float funcOneD(float x, int param, Matrix b){
-  //since this is linear: b_0*x+b_1
   if (param == 0)
-	return b.elements[0];
+	return sin(b.elements[1]*x);
   else
-    return 0;
+    return x*b.elements[0]*cos(b.elements[1]*x);
 }
 
 float funcTwoTrue(float x){
   //function in this example is quadratic
-  return 4*x*x+6*x;
+  return true_b0*x*x+true_b1*x;
 }
 
 float funcTwoP(float x, Matrix b){
@@ -414,7 +415,7 @@ int main(int argc, char* argv[]){
   Matrix x, y, b, J, b_prev, r, temp, inv,temp2, temp3, temp4, temp_A, temp_B,identity, temp5;
   int N = 3;
   int MIN = 0;
-  int MAX = 10;
+  int MAX = 5;
   int num_models = 100;
   int num_params = 2;
   double tol = 0.1;
@@ -434,32 +435,31 @@ int main(int argc, char* argv[]){
   init(&temp_B,num_params,1);
   init(&temp5,num_params,num_params);
   
-  fprintf(out_file_weights, "%f %f\n",2.5411,0.2595);
+  fprintf(out_file_weights, "%f %f\n",true_b0,true_b1);
   srand(time(0));
   for (int k = 0; k < num_models; k++){
-	  
 	  for (int i = 0; i < N; i++)
 		temp.elements[i] = random(MIN,MAX);
 	  
 	  for(int i = 0; i < x.height; i++)
 		for(int j = 0; j < x.width; j++){
 		  x.elements[i*x.width + j] = temp.elements[i];
-		  y.elements[i*y.width + j] = funcThreeTrue(x.elements[i*x.width+j]);
+		  y.elements[i*y.width + j] = funcOneTrue(x.elements[i*x.width+j]);
 		}
 
 	//initial guess
-		b.elements[0] = 2.5;
-		b.elements[1] = 0.25;
+		b.elements[0] = true_b0-0.2;
+		b.elements[1] = true_b1+0.4;
 
 	  for(int i = 0; i < J.height; i++) //for each equation
 		for(int j = 0; j < J.width; j++) //for each parameter
-		   J.elements[i*J.width + j] = funcThreeD(x.elements[i*x.width],j, b);
+		   J.elements[i*J.width + j] = funcOneD(x.elements[i*x.width],j, b);
 	
 	  int max_iter = 100000;
 
 	  for (int iter = 0; iter < max_iter; iter++){  
 		  for (int i = 0; i < N; i++)
-			r.elements[i] = funcThreeP(x.elements[i],b) - y.elements[i];
+			r.elements[i] = funcOneP(x.elements[i],b) - y.elements[i];
 		  
 		  temp4 = T(J);
 		  MatMul_(&temp4,&r,&temp_B);
@@ -474,7 +474,7 @@ int main(int argc, char* argv[]){
 		  
 		  for(int i = 0; i < J.height; i++) //for each equation
 			for(int j = 0; j < J.width; j++) //for each parameter
-			  J.elements[i*J.width + j] = funcThreeD(x.elements[i*x.width],j, b);
+			  J.elements[i*J.width + j] = funcOneD(x.elements[i*x.width],j, b);
 		  //printf("b updated:\n");
 		  //print(b);
 		  
