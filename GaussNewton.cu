@@ -228,14 +228,6 @@ Matrix T(Matrix A){
 	return transpose;
 }
 
-
-//make this efficient with cuda later
-//Matrix pseudoinv(Matrix A){
-
-//}
-
-//Matrix inverse
-
 void getCofactor(Matrix* A, Matrix* temp, int p, int q, int n) 
 {
 	int i = 0;
@@ -244,14 +236,12 @@ void getCofactor(Matrix* A, Matrix* temp, int p, int q, int n)
 	{
 		for(int col = 0; col < n; col++)
         { 
-            //  Copying into temporary matrix only those element 
-            //  which are not in given row and column 
+            //  Copy into temp elements not in row and col 
             if (row != p && col != q) 
             { 
                 temp->elements[i*temp->width + j++] = A->elements[row*A->width+col]; 
   
-                // Row is filled, so increase row index and 
-                // reset col index 
+                // Go to next row and first col
                 if (j == n - 1) 
                 { 
                     j = 0; 
@@ -262,30 +252,23 @@ void getCofactor(Matrix* A, Matrix* temp, int p, int q, int n)
     } 
 }
 
-/* Recursive function for finding determinant of matrix. 
-   n is current dimension of A[][]. */
 double determinant(Matrix* A, int n) 
 { 
-    double D = 0; // Initialize result 
+    double D = 0;
   
-    //  Base case : if matrix contains single element 
     if (n == 1) 
         return A->elements[0]; 
 	Matrix temp;
 	init(&temp,A->width,A->width);// To store cofactors 
   
-    int sign = 1;  // To store sign multiplier 
+    int sign = 1;
   
-     // Iterate for each element of first row 
+     //for each element of first row 
     for (int f = 0; f < n; f++) 
     { 
-        // Getting Cofactor of A[0][f] 
+        // get cofactor A[0][f] 
         getCofactor(A, &temp, 0, f, n); 
-		//if (n == A->width)
-			//print(temp);
         D += sign * A->elements[0*A->width+f] * determinant(&temp, n - 1); 
-  
-        // terms are to be added with alternate sign 
         sign = -sign;
     } 
   
@@ -301,7 +284,7 @@ void adjoint(Matrix* A, Matrix* Adj)
         return; 
     } 
   
-    // temp is used to store cofactors of A[][] 
+    // temp used to store cofactors of A
 	Matrix temp;
 	init(&temp, N,N);
     int sign = 1; 
@@ -310,26 +293,17 @@ void adjoint(Matrix* A, Matrix* Adj)
     { 
         for (int j=0; j<N; j++) 
         { 
-            // Get cofactor of A[i][j] 
             getCofactor(A, &temp, i, j, N); 
-  
-            // sign of adj[j][i] positive if sum of row 
-            // and column indexes is even. 
             sign = ((i+j)%2==0)? 1: -1; 
-  
-            // Interchanging rows and columns to get the 
-            // transpose of the cofactor matrix 
+            // get transpose of cofactor matrix 
             Adj->elements[j*Adj->width+i] = (sign)*(determinant(&temp, N-1)); 
         } 
     } 
 }
 
-// Function to calculate and store inverse, returns false if 
-// matrix is singular 
 double inverse(Matrix* A, Matrix* Inv) 
 { 
-	int N = A->width;
-    // Find determinant of A[][] 
+	int N = A->width; 
     double det = determinant(A, N); 
     if (det == 0) 
     { 
@@ -337,12 +311,12 @@ double inverse(Matrix* A, Matrix* Inv)
         return 0; 
     } 
   
-    // Find adjoint 
+    // find adjoint 
 	Matrix Adj;
 	init(&Adj,N,N); 
     adjoint(A, &Adj); 
   
-    // Find Inverse using formula "inverse(A) = adj(A)/det(A)" 
+    //inverse(A) = adj(A)/det(A) 
     for (int i=0; i<N; i++) 
         for (int j=0; j<N; j++) 
             Inv->elements[i*Inv->width+j] = Adj.elements[i*A->width+j]/float(det); 
@@ -369,12 +343,11 @@ void MatMul_(Matrix* A, Matrix* B, Matrix* C){
     for (int j = 0; j < B->width; j++){
 	  for (int k = 0; k < A->width; k++)
 	    C->elements[i*C->width+j]+=A->elements[i*A->width+k]*B->elements[k*B->width+j];
-	  //printf("C: ");
-	  //print(*C);
 	 }
 }
 
-//INPUT MATRIX MUST HAVE DIMENSIONS THAT ARE MULTIPLES OF THE BLOCK SIZE (= 2)
+//Expects input matrix of even dimensions
+//Calculate left pseudo-inverse
 Matrix pseudoInv(Matrix A){
 	Matrix pseudo, inv,temp,temp2;
 	init(&pseudo,A.width,A.height);
@@ -404,8 +377,6 @@ void setZero(Matrix* A){
   for(int i = 0; i < A->height; i++)
 		for(int j = 0; j < A->width; j++)
 			A->elements[i*A->width+j] = 0;
-		
-	
 }
 
 int main(int argc, char* argv[]){
@@ -512,8 +483,6 @@ int main(int argc, char* argv[]){
   if (tm.tm_hour > 12)
     tm.tm_hour -= 12;
   printf("Finished: %d-%d-%d %d:%d:%d\n", tm.tm_year + 1900, tm.tm_mon + 1, tm.tm_mday, tm.tm_hour, tm.tm_min, tm.tm_sec);
-  
-  
 }
 
 
