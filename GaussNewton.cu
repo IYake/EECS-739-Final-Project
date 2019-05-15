@@ -168,7 +168,7 @@ float funcTwoD(float x, int param, Matrix b){
   if (param == 0)
 	return 2*b.elements[0]*x;
   else
-    return b.elements[1];
+    return 1;
 }
 
 float funcThreeTrue(float t){
@@ -400,6 +400,14 @@ double random(int min, int max){
   return (rand() % (max - min + 1)) + min;
 }
 
+void setZero(Matrix* A){
+  for(int i = 0; i < A->height; i++)
+		for(int j = 0; j < A->width; j++)
+			A->elements[i*A->width+j] = 0;
+		
+	
+}
+
 int main(int argc, char* argv[]){
   FILE *in_file  = fopen("data.txt", "r"); // read only 
   //FILE *out_file_loss = fopen("loss.txt", "w"); // write only
@@ -441,10 +449,11 @@ int main(int argc, char* argv[]){
 	  for (int i = 0; i < N; i++)
 		temp.elements[i] = random(MIN,MAX);
 	  
+	  //randomly sample from dataset
 	  for(int i = 0; i < x.height; i++)
 		for(int j = 0; j < x.width; j++){
 		  x.elements[i*x.width + j] = temp.elements[i];
-		  y.elements[i*y.width + j] = funcOneTrue(x.elements[i*x.width+j]);
+		  y.elements[i*y.width + j] = funcTwoTrue(x.elements[i*x.width+j]);
 		}
 
 	//initial guess
@@ -453,13 +462,13 @@ int main(int argc, char* argv[]){
 
 	  for(int i = 0; i < J.height; i++) //for each equation
 		for(int j = 0; j < J.width; j++) //for each parameter
-		   J.elements[i*J.width + j] = funcOneD(x.elements[i*x.width],j, b);
+		   J.elements[i*J.width + j] = funcTwoD(x.elements[i*x.width],j, b);
 	
 	  int max_iter = 100000;
 
 	  for (int iter = 0; iter < max_iter; iter++){  
 		  for (int i = 0; i < N; i++)
-			r.elements[i] = funcOneP(x.elements[i],b) - y.elements[i];
+			r.elements[i] = funcTwoP(x.elements[i],b) - y.elements[i];
 		  
 		  temp4 = T(J);
 		  MatMul_(&temp4,&r,&temp_B);
@@ -474,7 +483,7 @@ int main(int argc, char* argv[]){
 		  
 		  for(int i = 0; i < J.height; i++) //for each equation
 			for(int j = 0; j < J.width; j++) //for each parameter
-			  J.elements[i*J.width + j] = funcOneD(x.elements[i*x.width],j, b);
+			  J.elements[i*J.width + j] = funcTwoD(x.elements[i*x.width],j, b);
 		  //printf("b updated:\n");
 		  //print(b);
 		  
@@ -485,6 +494,16 @@ int main(int argc, char* argv[]){
 		  }
 	  }
 	fprintf(out_file_weights, "%f %f\n",b.elements[0],b.elements[1]);
+	setZero(&b);
+	setZero(&x);
+	setZero(&y);
+	setZero(&J);
+	setZero(&r);
+	setZero(&temp_A);
+	setZero(&temp_B);
+	setZero(&temp3);
+	setZero(&temp4);
+	setZero(&temp5);
   }
   fclose(out_file_weights);
 
