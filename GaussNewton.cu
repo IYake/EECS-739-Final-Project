@@ -10,6 +10,8 @@
 #include "multShare.h"
 #include <math.h>
 #include <stdio.h>
+#include <stdlib.h>
+#include<time.h> 
 
 // Matrix multiplication - Host code
 // Matrix dimensions are assumed to be multiples of BLOCK_SIZE
@@ -353,7 +355,7 @@ Matrix subtract(Matrix A, Matrix B){
 	if (A.height != B.height || A.width != B.width)
 	  printf("Subtract error: dimensions of matrices don't match\n");
 	init(&C,A.height,A.width);
-	double alpha = 0.1;
+	double alpha = 0.001;
 	for (int i = 0; i < C.height; i++)
 	  for (int j = 0; j < C.width; j++)
 		C.elements[i*C.width+j] = A.elements[i*C.width+j] - alpha*B.elements[i*C.width+j];
@@ -393,22 +395,29 @@ double normTwo(Matrix r){
 	return sqrt(sum);
 }
 
+double random(int min, int max){
+  return (rand() % (max - min + 1)) + min;
+}
+
 int main(int argc, char* argv[]){
   FILE *in_file  = fopen("data.txt", "r"); // read only 
   //FILE *out_file_loss = fopen("loss.txt", "w"); // write only
-  FILE *out_file_weights = fopen("weights_base.txt", "w"); // write only
+  FILE *out_file_weights = fopen("weights.txt", "w"); // write only
   
   // test for files not existing. 
-//  if (in_file == NULL || out_file_loss == NULL) 
-//	{   
-//	  printf("Error! Could not open file\n"); 
-//	  exit(-1); // must include stdlib.h 
-//	} 
+  if (in_file == NULL || out_file_weights == NULL) 
+	{   
+	  printf("Error! Could not open file\n"); 
+	  exit(-1); // must include stdlib.h 
+	} 
 	
   Matrix x, y, b, J, b_prev, r, temp, inv,temp2, temp3, temp4, temp_A, temp_B,identity, temp5;
-  int N = 100;
+  int N = 5;
+  int MIN = 0;
+  int MAX = 20;
+  int num_models = 100;
   int num_params = 2;
-  double tol = 0.001;
+  double tol = 0.1;
   init(&x,N,1);
   init(&y,N,1);
   init(&r,N,1);
@@ -425,60 +434,67 @@ int main(int argc, char* argv[]){
   init(&temp_B,num_params,1);
   init(&temp5,num_params,num_params);
   
-//  temp.elements[0] = 1;
-//  temp.elements[1] = 2;
-//  temp.elements[2] = 4;
-//  temp.elements[3] = 5;
-//  temp.elements[4] = 8;
+  fprintf(out_file_weights, "%f %f\n",2.5411,0.2595);
   
-
-  for(int i = 0; i < x.height; i++)
-    for(int j = 0; j < x.width; j++){
-      x.elements[i*x.width + j] = i*x.width + j;
-      y.elements[i*y.width + j] = funcThreeTrue(x.elements[i*x.width+j]);
-	}
-
-//initial guess
-	b.elements[0] = 2.5;
-	b.elements[1] = 0.25;
-
-  for(int i = 0; i < J.height; i++) //for each equation
-    for(int j = 0; j < J.width; j++) //for each parameter
-       J.elements[i*J.width + j] = funcThreeD(x.elements[i*x.width],j, b);
-		
-  for (int iter = 0; iter < 1; iter++){  
+  for (int k = 0; k < num_models; k++){
+	  srand(time(0));
 	  for (int i = 0; i < N; i++)
-		r.elements[i] = funcThreeP(x.elements[i],b) - y.elements[i];
+		temp.elements[i] = random(MIN,MAX);
 	  
-	  temp4 = T(J);
-	  MatMul_(&temp4,&r,&temp_B);
-	  
-	  print(temp_B);
-	  init(&temp3,num_params,1);
-	  MatMul_(&temp4,&J,&temp_A);
-	  print(temp_A);
-	  
-	  inverse(&temp_A,&temp5);
-	  MatMul_(&temp5,&temp_B,&temp3);
-	  
-	  print(temp5);
-	  b = subtract(b,T(temp3));
-	  
+	  for(int i = 0; i < x.height; i++)
+		for(int j = 0; j < x.width; j++){
+		  x.elements[i*x.width + j] = temp.elements[i];
+		  y.elements[i*y.width + j] = funcThreeTrue(x.elements[i*x.width+j]);
+		}
+
+	//initial guess
+		b.elements[0] = 2.5;
+		b.elements[1] = 0.25;
+
 	  for(int i = 0; i < J.height; i++) //for each equation
-	    for(int j = 0; j < J.width; j++) //for each parameter
-          J.elements[i*J.width + j] = funcThreeD(x.elements[i*x.width],j, b);
-	  printf("b updated:\n");
-	  print(b);
-	  
-	  //fprintf(out_file_loss, "%f\n",normTwo(r));
-	  if (normTwo(r) < tol){
-		//fclose(out_file_loss);
-		//FILE *out_file_weights = fopen("weights_base.txt","r");
-		fprintf(out_file_weights, "%f %f\n",b.elements[0],b.elements[1]);
-		fclose(out_file_weights);
-		break;
+		for(int j = 0; j < J.width; j++) //for each parameter
+		   J.elements[i*J.width + j] = funcThreeD(x.elements[i*x.width],j, b);
+	
+	  int max_iter = 100000;
+
+	  for (int iter = 0; iter < max_iter; iter++){  
+		  for (int i = 0; i < N; i++)
+			r.elements[i] = funcThreeP(x.elements[i],b) - y.elements[i];
+		  
+		  temp4 = T(J);
+		  MatMul_(&temp4,&r,&temp_B);
+		  
+		  init(&temp3,num_params,1);
+		  MatMul_(&temp4,&J,&temp_A);
+		  
+		  inverse(&temp_A,&temp5);
+		  MatMul_(&temp5,&temp_B,&temp3);
+		  
+		  b = subtract(b,T(temp3));
+		  
+		  for(int i = 0; i < J.height; i++) //for each equation
+			for(int j = 0; j < J.width; j++) //for each parameter
+			  J.elements[i*J.width + j] = funcThreeD(x.elements[i*x.width],j, b);
+		  //printf("b updated:\n");
+		  //print(b);
+		  
+		  //fprintf(out_file_loss, "%f\n",normTwo(r));
+		  if (normTwo(r) < tol){
+			printf("Hit tol on model %d\n",k);
+			break;
+		  }
 	  }
+	fprintf(out_file_weights, "%f %f\n",b.elements[0],b.elements[1]);
   }
+  fclose(out_file_weights);
+
+  time_t t = time(NULL);
+  struct tm tm = *localtime(&t);
+  if (tm.tm_hour > 12)
+    tm.tm_hour -= 12;
+  printf("Finished: %d-%d-%d %d:%d:%d\n", tm.tm_year + 1900, tm.tm_mon + 1, tm.tm_mday, tm.tm_hour, tm.tm_min, tm.tm_sec);
+  
+  
 }
 
 
