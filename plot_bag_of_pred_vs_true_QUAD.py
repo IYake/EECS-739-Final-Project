@@ -3,7 +3,7 @@ import numpy as np
 
 index = 0
 x = []
-with open('weights_quad.txt') as f:
+with open('weights.txt') as f:
     lines = f.readlines()
     num = len(lines)
     x = list(range(num))
@@ -19,21 +19,23 @@ def f(x,b0,b1):
 def f_avg(x,b0,b1):
     avg = 0
     for i in range(len(b0)):
-        avg += f(x,b0[i],b1[i])
+        if (abs(b0[i]) < 20):
+            avg += f(x,b0[i],b1[i])
     return avg/len(b0)
 #
-X = np.arange(0,1,0.01)
+X = np.arange(0,20,0.1)
 
 for i in range(len(b0)):
-    if (i % 15 == 0):
+    if (abs(b0[i]) < 20):
         plt.plot(X,f(X,b0[i],b1[i]),'c')
 
+plt.plot(X,f_avg(X,b0,b1),'p')
 plt.plot(X,f(X,true_b0,true_b1),'r')
 
-plt.plot(X,f_avg(X,b0,b1),'p')
+
 #print(f_avg(1,b0,b1))
 
-plt.title("True function vs Predictions in bag: a*sin(bx)")
+plt.title("True function vs Predictions in bag: ax^2+bx")
 
 
 
