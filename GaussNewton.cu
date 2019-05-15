@@ -453,7 +453,7 @@ int main(int argc, char* argv[]){
 	  for(int i = 0; i < x.height; i++)
 		for(int j = 0; j < x.width; j++){
 		  x.elements[i*x.width + j] = temp.elements[i];
-		  y.elements[i*y.width + j] = funcTwoTrue(x.elements[i*x.width+j]);
+		  y.elements[i*y.width + j] = funcThreeTrue(x.elements[i*x.width+j]);
 		}
 
 	//initial guess
@@ -462,13 +462,13 @@ int main(int argc, char* argv[]){
 
 	  for(int i = 0; i < J.height; i++) //for each equation
 		for(int j = 0; j < J.width; j++) //for each parameter
-		   J.elements[i*J.width + j] = funcTwoD(x.elements[i*x.width],j, b);
+		   J.elements[i*J.width + j] = funcThreeD(x.elements[i*x.width],j, b);
 	
 	  int max_iter = 100000;
 
 	  for (int iter = 0; iter < max_iter; iter++){  
 		  for (int i = 0; i < N; i++)
-			r.elements[i] = funcTwoP(x.elements[i],b) - y.elements[i];
+			r.elements[i] = funcThreeP(x.elements[i],b) - y.elements[i];
 		  
 		  temp4 = T(J);
 		  MatMul_(&temp4,&r,&temp_B);
@@ -483,7 +483,7 @@ int main(int argc, char* argv[]){
 		  
 		  for(int i = 0; i < J.height; i++) //for each equation
 			for(int j = 0; j < J.width; j++) //for each parameter
-			  J.elements[i*J.width + j] = funcTwoD(x.elements[i*x.width],j, b);
+			  J.elements[i*J.width + j] = funcThreeD(x.elements[i*x.width],j, b);
 		  //printf("b updated:\n");
 		  //print(b);
 		  

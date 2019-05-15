@@ -22,7 +22,7 @@ def f_avg(x,b0,b1):
         avg += f(x,b0[i],b1[i])
     return avg/len(b0)
 #
-X = np.arange(0,30,0.01)
+X = np.arange(0,10,0.01)
 
 for i in range(len(b0)):
     plt.plot(X,f(X,b0[i],b1[i]),'c')
