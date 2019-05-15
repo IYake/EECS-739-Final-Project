@@ -3,7 +3,7 @@ import numpy as np
 
 index = 0
 x = []
-with open('weights_base.txt') as f:
+with open('weights.txt') as f:
     lines = f.readlines()
     num = len(lines)
     x = list(range(num))
@@ -22,7 +22,7 @@ def f_avg(x,b0,b1):
         avg += f(x,b0[i],b1[i])
     return avg/len(b0)
 
-X = np.arange(0,0.003,0.00001)
+X = np.arange(0,0.005,0.00001)
 
 for i in range(len(b0)):
     plt.plot(X,f(X,b0[i],b1[i]),'c')

@@ -412,9 +412,9 @@ int main(int argc, char* argv[]){
 	} 
 	
   Matrix x, y, b, J, b_prev, r, temp, inv,temp2, temp3, temp4, temp_A, temp_B,identity, temp5;
-  int N = 5;
+  int N = 3;
   int MIN = 0;
-  int MAX = 20;
+  int MAX = 10;
   int num_models = 100;
   int num_params = 2;
   double tol = 0.1;
@@ -435,9 +435,9 @@ int main(int argc, char* argv[]){
   init(&temp5,num_params,num_params);
   
   fprintf(out_file_weights, "%f %f\n",2.5411,0.2595);
-  
+  srand(time(0));
   for (int k = 0; k < num_models; k++){
-	  srand(time(0));
+	  
 	  for (int i = 0; i < N; i++)
 		temp.elements[i] = random(MIN,MAX);
 	  
