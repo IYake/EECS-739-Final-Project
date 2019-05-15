@@ -38,6 +38,29 @@ plt.plot(X,f(X,true_b0,true_b1),'r')
 
 plt.title("True function vs Predictions in bag: a*sin(bx)")
 
+#mean squared error
+#b0 and b1 are single values
+def mean_squared_error(X,b0,b1):
+    sum_ = 0
+    for x in X:
+        val = f(x,b0,b1)-f(x,true_b0,true_b1)
+        sum_ += val*val
+    return sum_ / len(X)
+
+#b0 and b1 are arrays
+def mean_squared_error_favg(X,b0,b1):
+    sum_ = 0
+    for x in X:
+        val = f_avg(x,b0,b1)-f(x,true_b0,true_b1)
+        sum_ += val*val
+    return sum_ / len(X)
+
+def avg_mean_squared_error(X,b0,b1):
+    return np.average([mean_squared_error(X,b0[i],b1[i]) for i in range(len(b0))])
+
+print(avg_mean_squared_error(X,b0,b1))
+print(mean_squared_error_favg(X,b0,b1))
+
 
 
 
