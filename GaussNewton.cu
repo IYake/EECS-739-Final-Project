@@ -421,12 +421,12 @@ int main(int argc, char* argv[]){
 	} 
 	
   Matrix x, y, b, J, b_prev, r, temp, inv,temp2, temp3, temp4, temp_A, temp_B,identity, temp5;
-  int N = 3;
+  int N = 10;
   int MIN = 0;
-  int MAX = 20;
+  int MAX = 3;
   int num_models = 100;
   int num_params = 2;
-  double tol = 0.1;
+  double tol = 0.001;
   init(&x,N,1);
   init(&y,N,1);
   init(&r,N,1);
